@@ -1,0 +1,203 @@
+=============================
+2.2.2 Data Loading with Hive
+=============================
+1.  Creating temporary Table CDW_SAPP_CUSTOMER
+create table temp_CDW_SAPP_CUSTOMER
+(
+  FIRST_NAME STRING,
+  MIDDLE_NAME STRING,
+  LAST_NAME STRING,
+  SSN STRING,
+  Credit_cardno STRING,
+  APT_NO STRING, STREET_NAME STRING,
+  CUST_CITY STRING,
+  CUST_STATE STRING,
+  CUST_COUNTRY STRING,
+  CUST_ZIP STRING,
+  CUST_PHONE INT,
+  CUST_EMAIL STRING,
+  LAST_UPDATED TIMESTAMP
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n';
+
+LOAD DATA INPATH "/user/maria_dev/Credit_Card_System/CDW_SAPP_CUSTOMER"
+OVERWRITE INTO TABLE temp_CDW_SAPP_CUSTOMER;
+
+
+2.  Creating temporary Table CDW_SAPP_BRANCH
+create table temp_CDW_SAPP_BRANCH
+(
+  BRANCH_CODE int,
+  BRANCH_NAME string,
+  BRANCH_STREET string,
+  BRANCH_CITY string,
+  BRANCH_STATE string,
+  BRANCH_ZIP int,
+  BRANCH_PHONE string,
+  LAST_UPDATED timestamp
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n';
+
+LOAD DATA INPATH "/user/maria_dev/Credit_Card_System/CDW_SAPP_BRANCH"
+OVERWRITE INTO TABLE temp_CDW_SAPP_BRANCH;
+
+
+3.  Creating temporary Table CDW_SAPP_CREDITCARD
+create table temp_CDW_SAPP_CREDITCARD
+(
+  TRANSACTION_ID int,
+  DAY int,
+  MONTH int,
+  YEAR int,
+  CREDIT_CARD_NO string,
+  CUST_SSN int,
+  BRANCH_CODE int,
+  TRANSACTION_TYPE string,
+  TRANSACTION_VALUE decimal(20,3)
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n';
+
+LOAD DATA INPATH "/user/maria_dev/Credit_Card_System/CDW_SAPP_CREDITCARD"
+OVERWRITE INTO TABLE temp_CDW_SAPP_CREDITCARD;
+
+
+4.  Creating transformed, partitioned table CDW_SAPP_D_CUSTOMER
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+create table CDW_SAPP_D_CUSTOMER
+(
+  CUST_SSN int,
+  CUST_F_NAME string,
+  CUST_M_NAME string,
+  CUST_L_NAME string,
+  CUST_CC_NO string,
+  CUST_STREET string,
+  CUST_CITY string,
+  CUST_COUNTRY string,
+  CUST_ZIP int,
+  CUST_PHONE string,
+  CUST_EMAIL string,
+  LAST_UPDATED timestamp
+)
+PARTITIONED BY (CUST_STATE string);
+
+INSERT INTO TABLE CDW_SAPP_D_CUSTOMER
+PARTITION (CUST_STATE)
+SELECT 
+  SSN AS CUST_SSN,
+  CONCAT( UPPER( SUBSTRING( FIRST_NAME, 1, 1) ), LOWER( SUBSTRING( FIRST_NAME, 2 ) ) ) AS CUST_F_NAME,
+  CONCAT( LOWER( SUBSTRING( MIDDLE_NAME, 1) ) ) AS CUST_M_NAME,
+  CONCAT( UPPER( SUBSTRING( LAST_NAME, 1, 1) ), LOWER( SUBSTRING( LAST_NAME, 2 ) ) ) AS CUST_L_NAME,
+  Credit_cardno AS CUST_CC_NO,
+  CONCAT (APT_NO, " ", STREET_NAME) AS CUST_STREET,
+  CUST_CITY,
+  CUST_COUNTRY,
+  CUST_ZIP,
+  CONCAT( SUBSTR(CUST_PHONE, 1,3), "-", SUBSTR(CUST_PHONE, 4) ) AS CUST_PHONE,
+  CUST_EMAIL,
+  LAST_UPDATED,
+  CUST_STATE
+FROM temp_CDW_SAPP_CUSTOMER;
+
+
+5.  Creating transformed, partitioned table CDW_SAPP_D_BRANCH
+create table CDW_SAPP_D_BRANCH
+(
+  BRANCH_NAME string,
+  BRANCH_STREET string,
+  BRANCH_CITY string,
+  BRANCH_STATE string,
+  BRANCH_ZIP int,
+  BRANCH_PHONE string,
+  LAST_UPDATED timestamp
+)
+PARTITIONED BY (BRANCH_CODE int);
+
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+INSERT INTO TABLE CDW_SAPP_D_BRANCH
+PARTITION (BRANCH_CODE)
+SELECT 
+  BRANCH_NAME,
+  BRANCH_STREET,
+  BRANCH_CITY,
+  BRANCH_STATE,
+  NVL(BRANCH_ZIP, 999999) AS BRANCH_ZIP,
+  CONCAT ( "(", SUBSTR(BRANCH_PHONE, 1,3), ")", SUBSTR(BRANCH_PHONE, 4,3), "-", SUBSTRING(BRANCH_PHONE, 7) ),
+  LAST_UPDATED,
+  BRANCH_CODE
+FROM temp_CDW_SAPP_BRANCH;
+
+
+6.  Creating transformed partitioned table CDW_SAPP_F_CREDIT_CARD
+create table CDW_SAPP_F_CREDIT_CARD
+(
+  TRANSACTION_ID int,
+  CUST_CC_NO string,
+  TIMEID string,
+  CUST_SSN int,
+  BRANCH_CODE int,
+  TRANSACTION_VALUE decimal(20,3)
+)
+PARTITIONED BY (TRANSACTION_TYPE string);
+
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+INSERT INTO TABLE CDW_SAPP_F_CREDIT_CARD
+PARTITION (TRANSACTION_TYPE)
+SELECT
+  TRANSACTION_ID,
+  CREDIT_CARD_NO AS CUST_CC_NO,
+  CONCAT(YEAR, LPAD(MONTH, 2, 0), LPAD(DAY, 2, 0) ) AS TIMEID,
+  CUST_SSN,
+  BRANCH_CODE,
+  TRANSACTION_VALUE,
+  TRANSACTION_TYPE
+FROM temp_CDW_SAPP_CREDITCARD;
+
+7.  Creating temporary table temp_CDW_SAPP_TIME
+create table temp_CDW_SAPP_TIME
+(
+  TRANSACTION_ID int,
+  TIMEID string,
+  DAY int,
+  MONTH int,
+  QUARTER string,
+  YEAR int
+);
+
+INSERT OVERWRITE TABLE temp_CDW_SAPP_TIME
+SELECT
+  TRANSACTION_ID,
+  CONCAT(YEAR, LPAD(MONTH, 2, 0), LPAD(DAY, 2, 0) ) AS TIMEID,
+  DAY,
+  MONTH,
+  CEIL(MONTH/3) AS QUARTER,
+  YEAR
+FROM temp_cdw_sapp_creditcard;
+
+
+8.  Create partitioned table CDW_SAPP_D_TIME
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+create table CDW_SAPP_D_TIME
+(
+  TRANSACTION_ID int,
+  TIMEID string,
+  DAY int,
+  MONTH int,
+  YEAR int
+)
+PARTITIONED BY (QUARTER string)
+STORED AS textfile;
+
+INSERT OVERWRITE TABLE CDW_SAPP_D_TIME
+PARTITION (QUARTER)
+SELECT TRANSACTION_ID, TIMEID, DAY, MONTH, YEAR, QUARTER
+FROM temp_CDW_SAPP_TIME;

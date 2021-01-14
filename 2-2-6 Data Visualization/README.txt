@@ -1,0 +1,1 @@
+Hive Script and along with Hive Graphs output for problems 1 and 2.

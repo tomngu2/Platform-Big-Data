@@ -1,0 +1,3 @@
+oozie job -oozie http://localhost:11000/oozie -config /root/case_study/2-2-4b/job.properties -run
+
+

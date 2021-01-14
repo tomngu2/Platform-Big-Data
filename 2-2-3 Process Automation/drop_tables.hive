@@ -1,0 +1,9 @@
+drop table temp_cdw_sapp_customer;
+drop table temp_cdw_sapp_branch;
+drop table temp_cdw_sapp_time;
+drop table temp_cdw_sapp_creditcard;
+
+drop table cdw_sapp_d_customer;
+drop table cdw_sapp_d_branch;
+drop table cdw_sapp_d_time;
+drop table cdw_sapp_f_credit_card;

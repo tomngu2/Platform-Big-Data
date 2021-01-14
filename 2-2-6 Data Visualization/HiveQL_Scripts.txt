@@ -1,0 +1,70 @@
+HiveQL
+1.
+SELECT BRANCH_ZIP, SUM(TRANSACTION_VALUE) AS TOTAL_TRANSACTION_VALUE
+FROM CDW_SAPP_D_BRANCH 
+INNER JOIN CDW_SAPP_F_CREDIT_CARD 
+ON CDW_SAPP_D_BRANCH.BRANCH_CODE=CDW_SAPP_F_CREDIT_CARD.BRANCH_CODE
+GROUP BY BRANCH_ZIP
+ORDER BY TOTAL_TRANSACTION_VALUE DESC
+LIMIT 20;
+
+2155    23792.89
+52722   23641.99
+11756   23507.66
+60091   23350.68
+33904   22991.33
+30236   22895.51
+71730   22772.8
+11803   22766.42
+7501    22727.54
+27834   22675.21
+91010   22583.27
+38655   22500.28
+29550   22438.22
+48047   22401.72
+53151   22384.68
+27284   22377.31
+15317   22365.06
+49418   22357.39
+98444   22356.68
+32703   22247.96
+Time taken: 7.871 seconds, Fetched: 20 row(s)
+
+2.
+SELECT SUM(TRANSACTION_VALUE) AS TOTAL_TRANSACTION_VALUE, TRANSACTION_TYPE, QUARTER, YEAR
+FROM CDW_SAPP_F_CREDIT_CARD
+JOIN CDW_SAPP_D_TIME
+ON CDW_SAPP_F_CREDIT_CARD.TRANSACTION_ID = CDW_SAPP_D_TIME.TRANSACTION_ID
+WHERE YEAR=2018
+GROUP BY TRANSACTION_TYPE, QUARTER, YEAR
+ORDER BY QUARTER;
+
+87258.77        Bills   1       2018
+83592.61        Healthcare      1       2018
+83458.26        Grocery 1       2018
+81988.72        Education       1       2018
+83248.04        Test    1       2018
+86465.9 Entertainment   1       2018
+88131.83        Gas     1       2018
+85567.59        Healthcare      2       2018
+82395.39        Gas     2       2018
+85418.93        Entertainment   2       2018
+85753.15        Grocery 2       2018
+83588.01        Test    2       2018
+81663.14        Education       2       2018
+86596.04        Bills   2       2018
+80599.88        Gas     3       2018
+89345.97        Bills   3       2018
+88787.99        Education       3       2018
+83102.35        Entertainment   3       2018
+83751.94        Grocery 3       2018
+83037.53        Healthcare      3       2018
+85096.54        Test    3       2018
+83962.92        Entertainment   4       2018
+89377.78        Test    4       2018
+88278.47        Healthcare      4       2018
+85540.22        Education       4       2018
+88204.5 Bills   4       2018
+84088.28        Grocery 4       2018
+84932.16        Gas     4       2018
+Time taken: 6.318 seconds, Fetched: 28 row(s)

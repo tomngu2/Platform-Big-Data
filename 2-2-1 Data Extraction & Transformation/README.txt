@@ -1,0 +1,1 @@
+Sqoop scripts to load RDBMS tables into HDFS.

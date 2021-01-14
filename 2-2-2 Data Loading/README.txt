@@ -1,0 +1,1 @@
+Hive scripts that creates 4 temporary/staging tables & 4 permanent/partitioned tables.

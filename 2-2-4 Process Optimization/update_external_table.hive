@@ -1,0 +1,79 @@
+create external table if not exists update_CDW_SAPP_CUSTOMER
+(
+  FIRST_NAME STRING,
+  MIDDLE_NAME STRING,
+  LAST_NAME STRING,
+  SSN STRING,
+  Credit_cardno STRING,
+  APT_NO STRING, STREET_NAME STRING,
+  CUST_CITY STRING,
+  CUST_STATE STRING,
+  CUST_COUNTRY STRING,
+  CUST_ZIP STRING,
+  CUST_PHONE INT,
+  CUST_EMAIL STRING,
+  LAST_UPDATED TIMESTAMP
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS textfile
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_CUSTOMER/";
+
+
+create external table if not exists update_CDW_SAPP_BRANCH
+(
+  BRANCH_CODE int,
+  BRANCH_NAME string,
+  BRANCH_STREET string,
+  BRANCH_CITY string,
+  BRANCH_STATE string,
+  BRANCH_ZIP int,
+  BRANCH_PHONE string,
+  LAST_UPDATED timestamp
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS textfile
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_BRANCH/";
+
+
+create external table if not exists update_CDW_SAPP_CREDITCARD
+(
+  TRANSACTION_ID int,
+  DAY int,
+  MONTH int,
+  YEAR int,
+  CREDIT_CARD_NO string,
+  CUST_SSN int,
+  BRANCH_CODE int,
+  TRANSACTION_TYPE string,
+  TRANSACTION_VALUE decimal(20,3)
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS textfile
+LOCATION "/user/maria_dev/Credit_Card_System/CDW_SAPP_CREDITCARD/";
+
+
+create external table if not exists update_CDW_SAPP_TIME
+(
+  TRANSACTION_ID int,
+  TIMEID string,
+  DAY int,
+  MONTH int,
+  QUARTER string,
+  YEAR int
+);
+
+INSERT OVERWRITE TABLE update_CDW_SAPP_TIME
+SELECT
+  TRANSACTION_ID,
+  CONCAT(YEAR, LPAD(MONTH, 2, 0), LPAD(DAY, 2, 0) ) AS TIMEID,
+  DAY,
+  MONTH,
+  CEIL(MONTH/3) AS QUARTER,
+  YEAR
+FROM update_cdw_sapp_creditcard;

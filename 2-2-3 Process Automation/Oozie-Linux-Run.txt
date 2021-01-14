@@ -1,0 +1,7 @@
+==================================
+Oozie command executed in Linux
+==================================
+
+oozie job -oozie http://localhost:11000/oozie -config /root/case_study/2-2-3/job.properties -run
+
+job: 0000002-181227194723403-oozie-oozi-W

@@ -1,0 +1,18 @@
+<coordinator-app xmlns = "uri:oozie:coordinator:0.2" name =
+   "case-study-2-2-4b" frequency = "20" start = "2018-12-30T17:27Z" end = "2018-12-30T18:27Z" timezone = "America/New_York" >
+   
+   <controls>
+      <timeout>1</timeout>
+      <concurrency>1</concurrency>
+      <execution>FIFO</execution>
+      <throttle>1</throttle>
+   </controls>
+   
+   <action>
+      <workflow>
+         <app-path>${nameNode}/user/maria_dev/oozie_case_study/2-2-4b/workflow.xml</app-path>
+      </workflow>
+   </action>
+	
+</coordinator-app>
+
